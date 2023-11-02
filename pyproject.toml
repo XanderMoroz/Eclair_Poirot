@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "eclair-poirot"
+version = "0.1.0"
+description = "Marketplace for confectioners and sweets lovers"
+authors = ["xander <moroz070688@gmail.com>"]
+readme = "README.md"
+packages = [{include = "eclair_poirot"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.1"
+psycopg2-binary = "^2.9.9"
+sqlmodel = "^0.0.11"
+uvicorn = "^0.23.2"
+python-dotenv = "^1.0.0"
+python-multipart = "^0.0.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
