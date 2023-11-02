@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from app.core.app_config import settings
 from app.core.db_config import init_db
 
+from app.users.endpoints import auth_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -13,6 +14,7 @@ app = FastAPI(
     docs_url="/",
 )
 
+app.include_router(auth_router, prefix="", tags=["Authentication"])
 
 @app.on_event("startup")
 def on_startup():
