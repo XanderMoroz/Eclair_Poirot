@@ -1,3 +1,6 @@
+from typing import Optional
+from urllib.request import Request
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.db_config import get_session
@@ -20,7 +23,6 @@ def create_my_sweet(sweet_schema: SweetCreate,
 
     Args:
      - sweet_schema (SweetCreate): Sweet creation data.
-     - session (Session): SQLAlchemy database session.
      - current_user (User): Current authenticated user.
 
     Returns: Newly created sweet object.
@@ -31,16 +33,15 @@ def create_my_sweet(sweet_schema: SweetCreate,
 
 @user_sweets.put("/sweets/{sweet_id}", response_model=SweetResponse)
 def update_my_sweet(sweet_id: int,
-                  sweet_data: SweetCreate,
-                  session: Session = Depends(get_session),
-                  current_user=Depends(get_current_user)):
+                    sweet_data: SweetCreate,
+                    session: Session = Depends(get_session),
+                    current_user=Depends(get_current_user)):
     """
     **Updates a sweet by ID**
 
     Args:
      - sweet_id (int): ID of the sweet.
-     - sweet_data (SweetCreate): Updated sweet data.
-     - session (Session): SQLAlchemy database session.
+     - sweet_data (SweetCreate): Data for update sweet .
      - current_user (User): Current authenticated user.
 
     Returns: Updated sweet object.
@@ -69,7 +70,6 @@ def delete_my_sweet(sweet_id: int,
 
     Args:
      - sweet_id (int): ID of the sweet.
-     - session (Session): SQLAlchemy database session.
      - current_user (User): Current authenticated user.
 
     Returns: Deleted sweet object.
@@ -99,7 +99,6 @@ def get_sweets(page: int = 1, session: Session = Depends(get_session)):
 
     Args:
      - page (int): Page number.
-     - session (Session): SQLAlchemy database session.
 
     Returns: Dictionary containing total count and list of SweetResponse objects.
     """
@@ -111,11 +110,10 @@ def get_sweets(page: int = 1, session: Session = Depends(get_session)):
 @sweets.get("/sweets/{sweet_id}", response_model=SweetResponse)
 def get_sweet(sweet_id: int, session: Session = Depends(get_session)):
     """
-    Retrieves a sweet by ID.
+    **Retrieves a sweet by ID**
 
     Args:
      - sweet_id (int): ID of the sweet.
-     - session (Session): SQLAlchemy database session.
 
     Returns: Sweet object.
     """
@@ -128,3 +126,35 @@ def get_sweet(sweet_id: int, session: Session = Depends(get_session)):
         )
 
     return sweet
+
+
+@sweets.get("/search")
+def search_sweets(query: Optional[str] = None,
+                  session: Session = Depends(get_session),):
+    """
+    **Searches for sweets based on a search query**
+
+    Args:
+     - query (str, optional): Search query string. Defaults to None.
+
+    Returns: List of Sweet objects matching the search query.
+    """
+    search_result = db_manager.search_sweets(query, session=session)
+    return search_result
+
+
+@sweets.get("/filter")
+def filter_sweets(min_price: Optional[int] = 0,
+                  max_price: Optional[int] = 0,
+                  session: Session = Depends(get_session)):
+    """
+    **Filters sweets based on price range**
+
+    Args:
+     - min_price (int, optional): Minimum price value. Defaults to 0.
+     - max_price (int, optional): Maximum price value. Defaults to 0.
+
+    Returns: List of Sweet objects within the specified price range.
+    """
+    filter_result = db_manager.filter_sweets(min_price, max_price, session=session)
+    return filter_result
