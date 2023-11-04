@@ -18,7 +18,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme),
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    if not user.is_active:
+    if not user[0].is_active:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
         )

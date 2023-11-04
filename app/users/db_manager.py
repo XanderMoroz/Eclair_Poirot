@@ -68,7 +68,8 @@ def get_user_by_token(token: str, session: Session):
     """
     query = select(Token).where(Token.token == token).where(Token.expires > datetime.now())
     results = session.exec(query)
-    token = results.one_or_none()
+    t_token = results.one_or_none()
+    token = t_token[0]
 
     query = select(User).where(User.id == token.user_id)
     results = session.exec(query)
@@ -85,7 +86,8 @@ def get_user_by_id(user_id: int, session: Session):
     """
     query = select(User).where(User.id == user_id)
     result = session.exec(query)
-    return result.one_or_none()
+    scalar_obj = result.one_or_none()
+    return scalar_obj
 
 
 def get_user_by_email(email: str, session: Session):
@@ -96,4 +98,5 @@ def get_user_by_email(email: str, session: Session):
     """
     query = select(User).where(User.email == email)
     result = session.exec(query)
-    return result.one_or_none()
+    user = result.one_or_none()
+    return user

@@ -37,16 +37,19 @@ def authenticate_user(form_data: OAuth2PasswordRequestForm = Depends(), session:
     user = db_manager.get_user_by_email(email=form_data.username, session=session)
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    if not security_utils.validate_password(password=form_data.password, hashed_password=user.hashed_password):
+
+    if not security_utils.validate_password(
+            password=form_data.password, hashed_password=user[0].hashed_password
+    ):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    token = db_manager.create_user_token(user_id=user.id, session=session)
+    token = db_manager.create_user_token(user_id=user[0].id, session=session)
     uuid_to_str = str(token.token)
     token_dict = {"access_token": uuid_to_str, "expires": token.expires, "token_type": token.token_type}
     return token_dict
 
 
 @auth_router.get("/users/me")
-async def get_current_user(current_user: models.User = Depends(get_current_user)):
+def get_current_user(current_user: models.User = Depends(get_current_user)):
     """
     **Retrieves the current user.**
 
