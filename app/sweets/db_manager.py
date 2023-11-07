@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
 
-from app.sweets.models import Sweet, SweetCreate
+from app.sweets.models import Sweet, Category, SweetCategory
+from app.sweets.schemas import SweetCreate, CategoryCreate
 
 
 def create_sweet(sweet: SweetCreate, session: Session, user):
@@ -42,8 +43,8 @@ def get_sweet_by_id(sweet_id: int, session):
     result = session.exec(query)
     sweet = result.one_or_none()
     return sweet
-#
-#
+
+
 def get_deserts(page: int, session):
     """
     Retrieves a list of sweets with pagination.
@@ -122,6 +123,81 @@ def delete_sweet(sweet_id: int, session):
 
     return sweet
 
+
+def create_category(category: CategoryCreate, session):
+    """
+    Creates a new category.
+
+    Args:
+     - category (CategoryCreate): category creation data.
+     - session (Session): SQLAlchemy database session.
+     - user: User object.
+
+    Returns: Newly created category object.
+    """
+    new_category = Category(
+        title=category.title
+    )
+    session.add(new_category)
+    session.commit()
+    session.refresh(new_category)
+
+    return new_category
+
+
+def get_category_by_id(category_id: int, session):
+    """
+    Retrieves a category by ID.
+
+    Args:
+     - category_id (int): ID of the category.
+     - session (Session): SQLAlchemy database session.
+
+    Returns: Category object or None if not found.
+    """
+    query = select(Category).where(Category.id == category_id)
+    result = session.exec(query)
+    category = result.one_or_none()
+    return category
+
+
+def add_category_of_sweet(sweet_id: int, category_id: int, session):
+    """
+    Adds a category to a sweet.
+
+    Args:
+    - sweet_id (int): ID of the sweet.
+    - category_id (int): ID of the category.
+    - session (Session): SQLAlchemy database session.
+
+    Returns: Newly created SweetCategory object.
+    """
+    new_sweet_category = SweetCategory(
+        sweet_id=sweet_id,
+        category_id=category_id
+    )
+    session.add(new_sweet_category)
+    session.commit()
+    session.refresh(new_sweet_category)
+    return new_sweet_category
+
+def remove_category_of_sweet(sweet_id: int, category_id: int, session):
+    """
+    Removes a category from a sweet.
+
+    Args:
+     - sweet_id (int): ID of the sweet.
+     - category_id (int): ID of the category.
+     - session (Session): SQLAlchemy database session.
+
+    Returns: Removed SweetCategory object.
+    """
+    query = select(SweetCategory).where(SweetCategory.sweet_id == sweet_id, SweetCategory.category_id == category_id)
+    results = session.exec(query)
+    sweet_category = results.one()
+    session.delete(sweet_category)
+    session.commit()
+    return sweet_category
 
 def search_sweets(search_query: str, session: Session):
     """

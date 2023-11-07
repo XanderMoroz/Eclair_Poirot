@@ -5,13 +5,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.db_config import get_session
 from app.users.models import User
-from app.sweets.models import SweetCreate, SweetResponse
+from app.sweets.schemas import SweetCreate, SweetResponse, CategoryCreate, CategoryResponse, SweetCategoryResponse
 from app.sweets import db_manager
 from app.core.dependencies import get_current_user
 from sqlmodel import Session
 
 user_sweets = APIRouter()
 sweets = APIRouter()
+admin_only = APIRouter()
 
 
 @user_sweets.post("/sweets", response_model=SweetResponse, status_code=201)
@@ -50,7 +51,7 @@ def update_my_sweet(sweet_id: int,
     if sweet.user_id != current_user[0].id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to modify this desert",
+            detail="You don't have access to modify this sweet",
         )
 
     sweet = db_manager.update_sweet(
@@ -84,12 +85,84 @@ def delete_my_sweet(sweet_id: int,
     if sweet.user_id != current_user[0].id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have access to delete this desert",
+            detail="You don't have access to delete this sweet",
         )
 
     sweet = db_manager.delete_sweet(sweet_id, session)
 
     return sweet
+
+
+@user_sweets.post("/sweet_category", response_model=SweetCategoryResponse, status_code=201)
+def add_sweet_to_category(sweet_id: int, category_id: int,
+                          session: Session = Depends(get_session),
+                          current_user: User = Depends(get_current_user)):
+    """
+    *Adds a sweet to a category*
+
+    Args:
+     - sweet_id (int): ID of the sweet.
+     - category_id (int): ID of the category.
+     - session (Session): SQLAlchemy database session.
+     - current_user (User): Current authenticated user.
+
+    Returns: Newly created SweetCategory object.
+    """
+    sweet = db_manager.get_sweet_by_id(sweet_id, session)
+    if sweet is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sweet {sweet_id} not exist",
+        )
+    if sweet.user_id != current_user[0].id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to manage this sweet",
+        )
+
+    category = db_manager.get_category_by_id(category_id, session)
+    if category is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Category {category_id} not exist",
+        )
+
+    new_sweet_category = db_manager.add_category_of_sweet(sweet_id, category_id, session)
+    return new_sweet_category
+
+
+@user_sweets.delete("/sweet_category", response_model=SweetCategoryResponse, status_code=201)
+def remove_sweet_from_category(sweet_id: int, category_id: int,
+                               session: Session = Depends(get_session),
+                               current_user: User = Depends(get_current_user)):
+    """
+    **Removes a sweet from a category**
+
+    Args:
+     - sweet_id (int): ID of the sweet.
+     - category_id (int): ID of the category.
+     - session (Session): SQLAlchemy database session.
+     - current_user (User): Current authenticated user.
+
+    Returns: Removed SweetCategory object.
+    """
+    sweet = db_manager.get_sweet_by_id(sweet_id, session)
+    if sweet.user_id != current_user[0].id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to manage this sweet",
+        )
+
+    category = db_manager.get_category_by_id(category_id, session)
+    if category is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Category {category_id} not exist",
+        )
+
+    deleted_sweet_category = db_manager.remove_category_of_sweet(sweet_id, category_id, session)
+    return deleted_sweet_category
+
 
 
 @sweets.get("/sweets")
@@ -158,3 +231,11 @@ def filter_sweets(min_price: Optional[int] = 0,
     """
     filter_result = db_manager.filter_sweets(min_price, max_price, session=session)
     return filter_result
+
+
+@admin_only.post("/categories", response_model=CategoryResponse, status_code=201)
+def create_category(category_schema: CategoryCreate,
+                    session: Session = Depends(get_session),):
+
+    new_category = db_manager.create_category(category_schema, session)
+    return new_category
