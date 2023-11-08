@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 
-from app.sweets.models import Sweet, Category, SweetCategory
-from app.sweets.schemas import SweetCreate, CategoryCreate
+from app.sweets.models import Sweet, Category, SweetCategory, Ingredient, SweetIngredient
+from app.sweets.schemas import SweetCreate, CategoryCreate, IngredientCreate
 
 
 def create_sweet(sweet: SweetCreate, session: Session, user):
@@ -44,6 +44,7 @@ def get_my_sweets(session: Session, user):
     result = session.exec(query)
     sweets = result.all()
     print(sweets[0].categories)
+    print(sweets[0].ingredients)
     return sweets
 
 
@@ -144,7 +145,7 @@ def delete_sweet(sweet_id: int, session):
 
 def create_category(category: CategoryCreate, session):
     """
-    Creates a new category.
+    Creates a new category of sweets.
 
     Args:
      - category (CategoryCreate): category creation data.
@@ -199,6 +200,7 @@ def add_category_of_sweet(sweet_id: int, category_id: int, session):
     session.refresh(new_sweet_category)
     return new_sweet_category
 
+
 def remove_category_of_sweet(sweet_id: int, category_id: int, session):
     """
     Removes a category from a sweet.
@@ -216,6 +218,87 @@ def remove_category_of_sweet(sweet_id: int, category_id: int, session):
     session.delete(sweet_category)
     session.commit()
     return sweet_category
+
+
+def create_ingredient(ingredient: IngredientCreate, session):
+    """
+    Creates a new ingredient of sweets.
+
+    Args:
+     - ingredient (IngredientCreate): ingredient payload data.
+     - session (Session): SQLAlchemy database session.
+     - user: User object.
+
+    Returns: Newly created ingredient object.
+    """
+    new_ingredient = Ingredient(
+        title=ingredient.title
+    )
+    session.add(new_ingredient)
+    session.commit()
+    session.refresh(new_ingredient)
+
+    return new_ingredient
+
+
+def get_ingredient_by_id(ingredient_id: int, session):
+    """
+    Retrieves a ingredient by ID.
+
+    Args:
+     - ingredient_id (int): ID of the ingredient.
+     - session (Session): SQLAlchemy database session.
+
+    Returns: Ingredient object or None if not found.
+    """
+    print(ingredient_id)
+    query = select(Ingredient).where(Ingredient.id == ingredient_id)
+    result = session.exec(query)
+    ingredient = result.one_or_none()
+    print(ingredient)
+    return ingredient
+
+
+def add_ingredient_to_sweet(sweet_id: int, ingredient_id: int, session):
+    """
+    Adds a ingredient to a sweet.
+
+    Args:
+    - sweet_id (int): ID of the sweet.
+    - ingredient_id (int): ID of the ingredient.
+    - session (Session): SQLAlchemy database session.
+
+    Returns: Newly created SweetIngredient object.
+    """
+    new_sweet_ingredient = SweetIngredient(
+        sweet_id=sweet_id,
+        ingredient_id=ingredient_id
+    )
+    session.add(new_sweet_ingredient)
+    session.commit()
+    session.refresh(new_sweet_ingredient)
+    return new_sweet_ingredient
+
+
+def remove_ingredient_of_sweet(sweet_id: int, ingredient_id: int, session):
+    """
+    Removes a ingredient from a sweet.
+
+    Args:
+     - sweet_id (int): ID of the sweet.
+     - ingredient_id (int): ID of the ingredient.
+     - session (Session): SQLAlchemy database session.
+
+    Returns: Removed SweetIngredient object.
+    """
+    query = select(SweetIngredient).where(SweetIngredient.sweet_id == sweet_id,
+                                          SweetIngredient.ingredient_id == ingredient_id)
+    results = session.exec(query)
+    sweet_ingredient = results.one()
+    session.delete(sweet_ingredient)
+    session.commit()
+    return sweet_ingredient
+
 
 def search_sweets(search_query: str, session: Session):
     """

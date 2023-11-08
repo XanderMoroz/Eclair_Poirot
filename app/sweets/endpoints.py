@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.db_config import get_session
 from app.users.models import User
-from app.sweets.schemas import SweetCreate, SweetResponse, CategoryCreate, CategoryResponse, SweetCategoryResponse
+from app.sweets.schemas import SweetCreate, SweetResponse, CategoryCreate, CategoryResponse, SweetCategoryResponse, \
+    IngredientResponse, SweetIngredientResponse, IngredientCreate
 from app.sweets import db_manager
 from app.core.dependencies import get_current_user
 from sqlmodel import Session
@@ -182,6 +183,76 @@ def remove_sweet_from_category(sweet_id: int, category_id: int,
     return deleted_sweet_category
 
 
+@user_sweets.post("/sweet_ingredient", response_model=SweetIngredientResponse, status_code=201)
+def add_ingredient_to_sweet(sweet_id: int, ingredient_id: int,
+                            session: Session = Depends(get_session),
+                            current_user: User = Depends(get_current_user)):
+    """
+    *Adds a ingredient to a sweet*
+
+    Args:
+     - sweet_id (int): ID of the sweet.
+     - ingredient_id (int): ID of the ingredient.
+     - session (Session): SQLAlchemy database session.
+     - current_user (User): Current authenticated user.
+
+    Returns: Newly created SweetIngredient object.
+    """
+    sweet = db_manager.get_sweet_by_id(sweet_id, session)
+    if sweet is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Sweet {sweet_id} not exist",
+        )
+    if sweet.user_id != current_user[0].id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to manage this sweet",
+        )
+
+    ingredient = db_manager.get_ingredient_by_id(ingredient_id, session)
+    if ingredient is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ingredient {ingredient_id} not exist",
+        )
+
+    new_sweet_ingredient = db_manager.add_ingredient_to_sweet(sweet_id, ingredient_id, session)
+    return new_sweet_ingredient
+
+
+@user_sweets.delete("/sweet_ingredient", response_model=SweetIngredientResponse, status_code=201)
+def remove_ingredient_from_sweet(sweet_id: int, ingredient_id: int,
+                                 session: Session = Depends(get_session),
+                                 current_user: User = Depends(get_current_user)):
+    """
+    **Removes a sweet from a category**
+
+    Args:
+     - sweet_id (int): ID of the sweet.
+     - ingredient_id (int): ID of the ingredient.
+     - session (Session): SQLAlchemy database session.
+     - current_user (User): Current authenticated user.
+
+    Returns: Removed SweetIngredient object.
+    """
+    sweet = db_manager.get_sweet_by_id(sweet_id, session)
+    if sweet.user_id != current_user[0].id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You don't have access to manage this sweet",
+        )
+
+    ingredient = db_manager.get_ingredient_by_id(ingredient_id, session)
+    if ingredient is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Ingredient {ingredient_id} not exist",
+        )
+
+    deleted_sweet_ingredient = db_manager.remove_ingredient_of_sweet(sweet_id, ingredient_id, session)
+    return deleted_sweet_ingredient
+
 
 @sweets.get("/sweets")
 def get_sweets(page: int = 1, session: Session = Depends(get_session)):
@@ -257,3 +328,11 @@ def create_category(category_schema: CategoryCreate,
 
     new_category = db_manager.create_category(category_schema, session)
     return new_category
+
+
+@admin_only.post("/ingredients", response_model=IngredientResponse, status_code=201)
+def create_ingredient(ingredient_schema: IngredientCreate,
+                      session: Session = Depends(get_session),):
+
+    new_ingredient = db_manager.create_ingredient(ingredient_schema, session)
+    return new_ingredient
