@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from urllib.request import Request
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -30,6 +30,24 @@ def create_my_sweet(sweet_schema: SweetCreate,
     """
     new_sweet = db_manager.create_sweet(sweet_schema, session, current_user)
     return new_sweet
+
+
+@user_sweets.get("/my_sweets", response_model=List[SweetResponse])
+def get_my_sweets(
+        session: Session = Depends(get_session),
+        current_user: User = Depends(get_current_user)
+):
+    """
+    **Retrieves a list of sweets belongs to current user**
+
+    Args:
+     - current_user (User): Current authenticated user.
+
+    Returns: List of Sweet objects matching the current user.
+
+    """
+    sweets_of_user = db_manager.get_my_sweets(session, current_user)
+    return sweets_of_user
 
 
 @user_sweets.put("/sweets/{sweet_id}", response_model=SweetResponse)
@@ -216,7 +234,7 @@ def search_sweets(query: Optional[str] = None,
     return search_result
 
 
-@sweets.get("/filter")
+@sweets.get("/filter_by_price")
 def filter_sweets(min_price: Optional[int] = 0,
                   max_price: Optional[int] = 0,
                   session: Session = Depends(get_session)):

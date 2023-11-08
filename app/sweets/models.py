@@ -32,7 +32,7 @@ class Sweet(SQLModel, table=True):
 
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
     categories: List[Category] = Relationship(back_populates="sweets",
-                                                link_model=SweetCategory)
+                                              link_model=SweetCategory)
 
     class Config:
         orm_mode = True

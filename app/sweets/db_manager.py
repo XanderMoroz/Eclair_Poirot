@@ -29,6 +29,24 @@ def create_sweet(sweet: SweetCreate, session: Session, user):
     return new_sweet
 
 
+def get_my_sweets(session: Session, user):
+    """
+    Retrieves a sweets of current user
+
+    Args:
+     - session (Session): SQLAlchemy database session.
+     - user: User object.
+
+    Returns: List of Sweets objects or None.
+    """
+    user = user[0]
+    query = select(Sweet).where(Sweet.user_id == user.id)
+    result = session.exec(query)
+    sweets = result.all()
+    print(sweets[0].categories)
+    return sweets
+
+
 def get_sweet_by_id(sweet_id: int, session):
     """
     Retrieves a sweet by ID.
@@ -230,7 +248,7 @@ def filter_sweets(min_price: int,
     Returns: List of Sweet objects within the specified price range.
     """
 
-    query = select(Sweet).where(Sweet.price >= min_price, Sweet.price < max_price)
+    query = select(Sweet).where(Sweet.price >= min_price, Sweet.price <= max_price)
     results = session.exec(query)
     sweets = results.all()
 
