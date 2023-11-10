@@ -1,5 +1,7 @@
+import os
 from logging.config import fileConfig
 
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -9,9 +11,21 @@ from sqlmodel import SQLModel
 from app.users.models import User
 from app.sweets.models import Sweet, Category, SweetCategory
 
+load_dotenv()
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
+
+USER = os.environ.get("DEFAULT_DB_USER")    # Added
+PASS = os.environ.get("DEFAULT_DB_PASS")    # Added
+HOST = os.environ.get("DEFAULT_DB_HOST")    # Added
+DB_NAME = os.environ.get("DEFAULT_DB_NAME") # Added
+
+
+connection_string = f'postgresql+psycopg2://{USER}:{PASS}@{HOST}/{DB_NAME}'  # Added
+
 config = context.config
+config.set_main_option('sqlalchemy.url', connection_string)  # Added
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
