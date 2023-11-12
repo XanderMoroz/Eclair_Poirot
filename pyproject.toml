@@ -16,6 +16,8 @@ python-dotenv = "^1.0.0"
 python-multipart = "^0.0.6"
 alembic = "^1.12.1"
 asyncpg = "^0.28.0"
+sqladmin = "^0.15.2"
+itsdangerous = "^2.1.2"
 
 
 [build-system]

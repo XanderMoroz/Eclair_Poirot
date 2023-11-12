@@ -1,3 +1,5 @@
+from sqlalchemy.orm import sessionmaker
+
 from app.core.app_config import settings
 from sqlmodel import create_engine, SQLModel, Session
 
@@ -10,6 +12,10 @@ DB_NAME = settings.DEFAULT_DB_NAME
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL, echo=True)
+
+# Session for sqladmin
+admin_session = sessionmaker(bind=engine, class_=Session)
+
 
 def init_db():
     SQLModel.metadata.create_all(engine)
