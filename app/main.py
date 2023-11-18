@@ -34,10 +34,10 @@ admin.add_view(sweets_admin.IngredientAdmin)
 admin.add_view(sweets_admin.SweetIngredientAdmin)
 
 # Routers
-app.include_router(auth_router, prefix="", tags=["Authentication"])
-app.include_router(user_sweets, prefix="/profile", tags=["Profile"])
-app.include_router(sweets, prefix="", tags=["Sweets"])
-app.include_router(admin_only, prefix="", tags=["Admin Only"])
+app.include_router(auth_router, prefix="/api", tags=["Authentication"])
+app.include_router(user_sweets, prefix="/api/profile", tags=["Profile"])
+app.include_router(sweets, prefix="/api", tags=["Sweets"])
+app.include_router(admin_only, prefix="/api", tags=["Admin Only"])
 
 
 @app.on_event("startup")
